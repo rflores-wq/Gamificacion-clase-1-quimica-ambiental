@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoQuímica · Trivia de Química Ambiental v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#06201c; --emerald:#10b981; --teal:#14b8a6;
+    --lime:#bef264; --amber:#fbbf24; --coral:#fb7185;
+    --paper:#f4fbf7; --glass:rgba(244,251,247,0.07);
+    --glass-line:rgba(190,242,100,0.22);
+    --correct:#34d399; --wrong:#fb7185;
+    --shadow:0 30px 80px -25px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Manrope',sans-serif;color:var(--paper);
+    background:
+      radial-gradient(120% 90% at 12% -10%, #0f5d4d 0%, transparent 55%),
+      radial-gradient(100% 80% at 110% 10%, #0b3b6e 0%, transparent 50%),
+      radial-gradient(120% 120% at 50% 120%, #134e3a 0%, transparent 60%),
+      var(--ink);
+    min-height:100%;display:flex;align-items:center;justify-content:center;
+    padding:28px 16px;overflow-x:hidden;position:relative;
+  }
+  .bubbles{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none}
+  .bubbles span{position:absolute;bottom:-80px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, rgba(190,242,100,.35), rgba(20,184,166,.06) 60%, transparent 70%);
+    border:1px solid rgba(190,242,100,.12);animation:rise linear infinite}
+  @keyframes rise{0%{transform:translateY(0) scale(.6);opacity:0}10%{opacity:.8}90%{opacity:.5}100%{transform:translateY(-115vh) scale(1.1);opacity:0}}
+
+  .shell{position:relative;z-index:2;width:100%;max-width:700px}
+  .card{background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border:1px solid var(--glass-line);border-radius:28px;box-shadow:var(--shadow);
+    padding:36px 34px 30px;position:relative;overflow:hidden}
+  .card::before{content:"";position:absolute;top:-2px;left:0;right:0;height:4px;
+    background:linear-gradient(90deg,var(--lime),var(--teal),var(--amber),var(--lime));
+    background-size:300% 100%;animation:flow 6s linear infinite}
+  @keyframes flow{0%{background-position:0 0}100%{background-position:300% 0}}
+
+  /* control de audio */
+  .audio-ctrl{position:absolute;top:16px;right:18px;display:flex;gap:8px;z-index:6}
+  .audio-ctrl button{width:40px;height:40px;border-radius:12px;border:1px solid var(--glass-line);
+    background:rgba(255,255,255,.05);color:var(--paper);cursor:pointer;font-size:1.05rem;
+    display:grid;place-items:center;transition:.15s}
+  .audio-ctrl button:hover{background:rgba(190,242,100,.12);transform:translateY(-2px)}
+  .audio-ctrl button.off{opacity:.35;position:relative}
+  .audio-ctrl button.off::after{content:"";position:absolute;width:120%;height:2px;background:var(--coral);transform:rotate(-45deg)}
+
+  .kicker{font-size:.72rem;letter-spacing:.32em;text-transform:uppercase;color:var(--lime);
+    font-weight:700;display:flex;align-items:center;gap:9px}
+  .kicker::before{content:"";width:22px;height:2px;background:var(--lime);display:inline-block}
+  h1{font-family:'Fraunces',serif;font-weight:900;line-height:1.02;
+    font-size:clamp(2.2rem,7vw,3.3rem);margin:14px 0 6px;letter-spacing:-.02em}
+  h1 em{font-style:italic;color:var(--amber)}
+  .lede{color:rgba(244,251,247,.72);font-size:1.02rem;line-height:1.55;max-width:48ch}
+  .intro-best{margin-top:14px;font-size:.85rem;color:var(--amber);font-weight:700;letter-spacing:.04em}
+
+  .meta{display:flex;gap:14px;margin:22px 0 4px;flex-wrap:wrap}
+  .chip{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:16px;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);min-width:108px;flex:1}
+  .chip b{font-family:'Fraunces',serif;font-size:1.3rem;line-height:1}
+  .chip small{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,251,247,.6)}
+
+  .rules{margin:20px 0 0;padding:16px 18px;border-radius:16px;background:rgba(190,242,100,.06);
+    border:1px solid rgba(190,242,100,.18);font-size:.88rem;line-height:1.6;color:rgba(244,251,247,.82)}
+  .rules b{color:var(--lime)}
+
+  .btn{font-family:'Manrope',sans-serif;font-weight:800;font-size:1.02rem;border:none;cursor:pointer;
+    border-radius:16px;padding:16px 26px;background:linear-gradient(135deg,var(--lime),var(--teal));
+    color:#04231c;transition:transform .18s ease, box-shadow .25s ease, filter .2s;
+    box-shadow:0 14px 30px -12px rgba(20,184,166,.7);letter-spacing:.01em}
+  .btn:hover{transform:translateY(-3px);filter:brightness(1.06)}
+  .btn:active{transform:translateY(0)}
+  .start-btn{margin-top:24px;width:100%}
+
+  .top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+  .counter{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--lime);font-weight:700}
+  .stats{display:flex;gap:12px;align-items:center}
+  .stat{font-size:.92rem;font-weight:800}
+  .stat.score{color:var(--amber)}
+  .stat.streak{color:var(--lime);transition:transform .25s}
+  .stat.streak.pop{transform:scale(1.35)}
+
+  .timer-wrap{display:flex;align-items:center;gap:10px;margin:6px 0 2px}
+  .timer-bar{flex:1;height:9px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+  .timer-bar i{display:block;height:100%;width:100%;border-radius:999px;
+    background:linear-gradient(90deg,var(--lime),var(--teal));transition:width 1s linear, background .3s}
+  .timer-bar i.warn{background:linear-gradient(90deg,var(--amber),#f97316)}
+  .timer-bar i.danger{background:linear-gradient(90deg,#f97316,var(--coral))}
+  .timer-num{font-family:'Fraunces',serif;font-weight:900;font-size:1.05rem;min-width:34px;text-align:right}
+
+  .progress{height:7px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0 2px}
+  .progress i{display:block;height:100%;width:0;border-radius:999px;
+    background:linear-gradient(90deg,var(--teal),var(--lime));transition:width .5s cubic-bezier(.2,.8,.2,1)}
+
+  .tag{align-self:flex-start;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;
+    padding:6px 12px;border-radius:999px;background:rgba(190,242,100,.12);color:var(--lime);
+    border:1px solid rgba(190,242,100,.25);margin:14px 0 12px}
+  .q-text{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(1.3rem,3.6vw,1.62rem);
+    line-height:1.28;margin:6px 0 18px;letter-spacing:-.01em}
+
+  .options{display:flex;flex-direction:column;gap:11px}
+  .opt{display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);color:var(--paper);
+    border-radius:16px;padding:15px 16px;cursor:pointer;font-size:1rem;font-weight:500;
+    font-family:'Manrope',sans-serif;transition:border-color .18s, background .18s, transform .12s, opacity .2s}
+  .opt:hover:not(:disabled){border-color:var(--lime);background:rgba(190,242,100,.07);transform:translateX(4px)}
+  .opt:disabled{cursor:default}
+  .opt .key{flex:0 0 34px;height:34px;display:grid;place-items:center;border-radius:10px;
+    background:rgba(255,255,255,.07);font-weight:800;font-family:'Fraunces',serif;font-size:1rem;transition:.2s}
+  .opt.correct{border-color:var(--correct);background:rgba(52,211,153,.16)}
+  .opt.correct .key{background:var(--correct);color:#04231c}
+  .opt.wrong{border-color:var(--wrong);background:rgba(251,113,133,.14)}
+  .opt.wrong .key{background:var(--wrong);color:#fff}
+  .opt.dim{opacity:.4}
+  .opt.removed{opacity:.25;text-decoration:line-through}
+
+  .toolbar{display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap}
+  .lifeline{font-family:'Manrope',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer;
+    border-radius:12px;padding:10px 14px;background:rgba(251,191,36,.12);color:var(--amber);
+    border:1px solid rgba(251,191,36,.35);transition:.15s}
+  .lifeline:hover:not(:disabled){background:rgba(251,191,36,.22);transform:translateY(-2px)}
+  .lifeline:disabled{opacity:.35;cursor:default}
+
+  .feedback{margin-top:16px;border-radius:16px;padding:16px 18px;font-size:.95rem;line-height:1.5;
+    border:1px solid;opacity:0;transform:translateY(8px);transition:all .35s ease}
+  .feedback.show{opacity:1;transform:none}
+  .feedback.good{background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.4)}
+  .feedback.bad{background:rgba(251,113,133,.10);border-color:rgba(251,113,133,.4)}
+  .feedback b{font-family:'Fraunces',serif;display:block;margin-bottom:5px;font-size:1.02rem}
+  .feedback .good-h{color:var(--correct)} .feedback .bad-h{color:var(--wrong)}
+  .gain{font-weight:800;color:var(--amber)}
+
+  .next-row{display:flex;justify-content:flex-end;margin-top:16px;min-height:10px}
+  .next-btn{opacity:0;pointer-events:none;transition:opacity .3s}
+  .next-btn.show{opacity:1;pointer-events:auto}
+
+  .result{text-align:center}
+  .record-badge{display:inline-block;margin:0 auto 10px;padding:8px 16px;border-radius:999px;
+    background:linear-gradient(135deg,var(--amber),#f97316);color:#241400;font-weight:800;font-size:.85rem;
+    letter-spacing:.05em;animation:pulse 1s ease infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .ring{width:170px;height:170px;margin:6px auto 16px;position:relative}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .pct{position:absolute;inset:0;display:grid;place-items:center;
+    font-family:'Fraunces',serif;font-weight:900;font-size:2.6rem}
+  .verdict{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(1.7rem,5vw,2.3rem);margin-bottom:8px}
+  .verdict.gold{color:var(--amber)} .verdict.green{color:var(--correct)} .verdict.coral{color:var(--coral)}
+  .result p{color:rgba(244,251,247,.78);line-height:1.55;max-width:44ch;margin:0 auto 18px}
+  .res-stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+
+  .review{text-align:left;margin:6px 0 22px;display:flex;flex-direction:column;gap:8px}
+  .rev-item{border:1px solid rgba(255,255,255,.10);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.03)}
+  .rev-head{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer}
+  .rev-mark{flex:0 0 26px;height:26px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:.85rem}
+  .rev-mark.ok{background:rgba(52,211,153,.18);color:var(--correct)}
+  .rev-mark.no{background:rgba(251,113,133,.18);color:var(--wrong)}
+  .rev-tag{font-size:.82rem;font-weight:700;flex:1}
+  .rev-toggle{color:rgba(244,251,247,.5);font-size:.8rem}
+  .rev-body{max-height:0;overflow:hidden;transition:max-height .3s ease;padding:0 14px;
+    font-size:.88rem;line-height:1.5;color:rgba(244,251,247,.78)}
+  .rev-body.open{max-height:360px;padding:0 14px 14px}
+  .rev-body .ans{color:var(--correct);font-weight:700}
+
+  .hidden{display:none}
+  .confetti{position:fixed;top:-12px;width:10px;height:14px;z-index:50;opacity:.95;will-change:transform;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+  @media(max-width:520px){.card{padding:30px 20px 24px}.chip{min-width:0}.audio-ctrl{top:14px;right:14px}}
+</style>
+</head>
+<body>
+<div class="bubbles" id="bubbles"></div>
+
+<div class="shell">
+  <div class="card">
+
+    <div class="audio-ctrl">
+      <button id="sfxToggle" title="Efectos de sonido" onclick="toggleSfx()">🔊</button>
+      <button id="musicToggle" title="Música de fondo" onclick="toggleMusic()">🎵</button>
+    </div>
+
+    <!-- INTRO -->
+    <section id="intro">
+      <div class="kicker">Química Ambiental · Trivia v4</div>
+      <h1>Eco<em>Química</em><br>Reto Cronometrado</h1>
+      <p class="lede">Diez preguntas sobre esferas ambientales, estado estacionario, el radical OH, partición octanol–agua y fugacidad. Responde rápido, encadena rachas y usa tu comodín con cabeza.</p>
+      <div class="intro-best" id="introBest"></div>
+      <div class="meta">
+        <div class="chip"><b>10/20</b><small>Al azar del banco</small></div>
+        <div class="chip"><b>20 s</b><small>Por pregunta</small></div>
+        <div class="chip"><b>×5</b><small>Bono racha</small></div>
+        <div class="chip"><b>50:50</b><small>Comodín ×2</small></div>
+      </div>
+      <div class="rules">
+        <b>Cómo se puntúa:</b> 10 pts por acierto · <b>+ bono de velocidad</b> (hasta 5 según el tiempo que sobre) · <b>+ bono de racha</b>. Si se acaba el tiempo, cuenta como fallo y rompe la racha. Cada partida saca <b>10 preguntas al azar de un banco de 20</b> y baraja las opciones. 🔊🎵 arriba a la derecha para sonido y música.
+      </div>
+      <button class="btn start-btn" onclick="startQuiz()">Comenzar el reto →</button>
+    </section>
+
+    <!-- QUIZ -->
+    <section id="quiz" class="hidden">
+      <div class="top">
+        <span class="counter" id="counter">Pregunta 1 / 10</span>
+        <div class="stats">
+          <span class="stat streak" id="streak">🔥 0</span>
+          <span class="stat score" id="scoreLive">★ 0</span>
+        </div>
+      </div>
+      <div class="timer-wrap">
+        <div class="timer-bar"><i id="timerFill"></i></div>
+        <span class="timer-num" id="timerNum">20</span>
+      </div>
+      <div class="progress"><i id="bar"></i></div>
+      <div class="tag" id="tag">Tema</div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="options"></div>
+      <div class="toolbar">
+        <button class="lifeline" id="fiftyBtn" onclick="useFifty()">50:50 — descartar 2 (×<span id="fiftyLeft">2</span>)</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="next-row">
+        <button class="btn next-btn" id="nextBtn" onclick="nextQuestion()">Siguiente →</button>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section id="result" class="result hidden">
+      <div class="kicker" style="justify-content:center">Resultado final</div>
+      <div id="recordBadge" class="record-badge hidden">🏆 ¡Nuevo récord!</div>
+      <div class="ring">
+        <svg width="170" height="170" viewBox="0 0 170 170">
+          <circle cx="85" cy="85" r="74" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="14"/>
+          <circle id="ringFill" cx="85" cy="85" r="74" fill="none" stroke="url(#grad)" stroke-width="14"
+                  stroke-linecap="round" stroke-dasharray="465" stroke-dashoffset="465"/>
+          <defs><linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#bef264"/><stop offset="100%" stop-color="#14b8a6"/>
+          </linearGradient></defs>
+        </svg>
+        <div class="pct" id="ringPct">0%</div>
+      </div>
+      <div class="verdict" id="verdict"></div>
+      <p id="resultMsg"></p>
+      <div class="res-stats">
+        <div class="chip"><b id="rScore">0</b><small>Puntos</small></div>
+        <div class="chip"><b id="rBest">0</b><small>Mejor puntaje</small></div>
+        <div class="chip"><b id="rStreak">0</b><small>Racha máx.</small></div>
+        <div class="chip"><b id="rRight">0/10</b><small>Aciertos</small></div>
+      </div>
+      <div class="kicker" style="justify-content:center;margin-bottom:12px">Repaso · toca para ver la respuesta</div>
+      <div class="review" id="review"></div>
+      <button class="btn" style="width:100%" onclick="restart()">↻ Jugar de nuevo</button>
+    </section>
+
+  </div>
+</div>
+
+<script>
+/* ====================== BANCO DE PREGUNTAS ====================== */
+const BANK = [
+  {tag:"5 Esferas Ambientales",
+   q:"Según el marco clásico de la química ambiental (Manahan), ¿cuáles son las cinco esferas ambientales?",
+   options:[["Atmósfera, hidrosfera, geosfera, biosfera y antroposfera",true],
+            ["Troposfera, estratosfera, mesosfera, termosfera y exosfera",false],
+            ["Atmósfera, hidrosfera, criosfera, biosfera y magnetosfera",false],
+            ["Litosfera, océanos, bosques, ciudades y nubes",false]],
+   explain:"Las cinco esferas son atmósfera, hidrosfera, geosfera, biosfera y antroposfera (los sistemas humanos). B y C confunden capas atmosféricas o esferas físicas no estándar."},
+  {tag:"Interacción entre Esferas",
+   q:"La disolución de CO₂ atmosférico en el océano, formando ácido carbónico, es un ejemplo directo de interacción entre:",
+   options:[["Biosfera y antroposfera",false],["Atmósfera e hidrosfera",true],
+            ["Geosfera y biosfera",false],["Criosfera y atmósfera",false]],
+   explain:"Es un intercambio de masa atmósfera↔hidrosfera (transferencia gas–líquido), base de la acidificación oceánica y del balance global de carbono."},
+  {tag:"Estado Estacionario vs. Equilibrio",
+   q:"¿Cuál es la diferencia fundamental entre estado estacionario y equilibrio termodinámico?",
+   options:[["Son sinónimos: ambos implican que no hay reacciones químicas",false],
+            ["En el equilibrio la temperatura sube; en estado estacionario baja",false],
+            ["El estado estacionario mantiene C constante con flujos netos; el equilibrio no requiere flujo neto de materia ni energía",true],
+            ["El equilibrio solo ocurre en gases y el estado estacionario solo en líquidos",false]],
+   explain:"En estado estacionario un sistema abierto mantiene C constante por un flujo continuo (entradas = salidas + sumideros). En equilibrio no hay flujo neto ni aporte externo: es el mínimo de energía libre de un sistema cerrado."},
+  {tag:"Matemática del Estado Estacionario",
+   q:"Al asumir estado estacionario hacemos dC/dt = 0. ¿Qué implica esto para el balance?",
+   options:[["Que la masa del sistema es cero",false],
+            ["Que las entradas igualan a las salidas más los sumideros netos",true],
+            ["Que no entra ni sale nada del sistema",false],
+            ["Que la concentración crece de forma lineal con el tiempo",false]],
+   explain:"dC/dt = 0 significa acumulación nula: entradas = salidas + remoción interna. No implica masa cero ni ausencia de flujos, solo que el almacenamiento no cambia."},
+  {tag:"Radical Hidroxilo (OH)",
+   q:"¿Por qué se llama al radical hidroxilo (·OH) el 'detergente de la atmósfera'?",
+   options:[["Porque limpia partículas de polvo por atracción electrostática",false],
+            ["Porque produce ozono que esteriliza la estratosfera",false],
+            ["Porque es el oxidante diurno dominante que inicia la degradación de CH₄, CO y muchos COV",true],
+            ["Porque enfría la troposfera reflejando la radiación solar",false]],
+   explain:"El ·OH es muy reactivo y oxida una enorme variedad de gases traza (metano, CO, COV), iniciando su remoción. Por eso 'limpia' la atmósfera."},
+  {tag:"Formación del ·OH",
+   q:"¿Cuál es la principal vía de formación del radical ·OH en la troposfera durante el día?",
+   options:[["La fotólisis del ozono, que genera O(¹D), el cual reacciona con vapor de agua",true],
+            ["La combustión directa de metano en motores",false],
+            ["La condensación de nubes a gran altitud",false],
+            ["La descomposición del nitrógeno molecular por rayos UV",false]],
+   explain:"La luz UV rompe el O₃ y produce O(¹D); este reacciona con H₂O dando dos ·OH. Por eso el 'detergente' es máximo de día y en zonas húmedas."},
+  {tag:"Coeficiente Kow",
+   q:"El coeficiente de partición octanol–agua (Kow) se define como:",
+   options:[["La velocidad a la que un compuesto se evapora del agua",false],
+            ["La razón entre la concentración del compuesto en octanol y en agua en equilibrio",true],
+            ["El tiempo que tarda un contaminante en degradarse en el suelo",false],
+            ["La masa de un gas disuelta por unidad de presión",false]],
+   explain:"Kow = C(octanol)/C(agua) en equilibrio. El octanol imita los lípidos, así que Kow mide la afinidad por la fase orgánica frente a la acuosa."},
+  {tag:"Kow y Bioacumulación",
+   q:"Dos compuestos: X (log Kow = 6) y Y (log Kow = 1). ¿Cuál bioacumula más y por qué?",
+   options:[["Y, porque al ser más soluble en agua entra fácil a los tejidos",false],
+            ["Ninguno: el Kow no se relaciona con la bioacumulación",false],
+            ["X, porque su alto Kow indica gran afinidad lipofílica y tendencia a acumularse en grasas",true],
+            ["Ambos por igual, ya que el Kow solo afecta la volatilidad",false]],
+   explain:"Un log Kow alto (X = 6) es hidrofóbico/lipofílico: se concentra en grasas y se biomagnifica en la cadena trófica. Por eso los POPs tienen log Kow elevado."},
+  {tag:"Procesos Intrínsecos vs. Extrínsecos",
+   q:"En el análisis por compartimentos, ¿cuál es la diferencia entre procesos intrínsecos y extrínsecos?",
+   options:[["Intrínsecos ocurren de noche; extrínsecos de día",false],
+            ["Intrínsecos son transformaciones dentro del compartimento (reacción, degradación); extrínsecos son transporte entre compartimentos (advección, difusión, entradas/salidas)",true],
+            ["Intrínsecos solo aplican a gases; extrínsecos solo a sólidos",false],
+            ["Son lo mismo; la distinción es solo histórica",false]],
+   explain:"Intrínsecos: transforman/destruyen masa dentro del compartimento (biodegradación, hidrólisis). Extrínsecos: mueven masa a través de las fronteras (advección, difusión, flujos). Son los términos de 'sumidero/producción' vs. 'transporte' del balance."},
+  {tag:"Fugacidad y Partición",
+   q:"Según el concepto de fugacidad (tendencia de escape), ¿hacia dónde se mueve netamente una sustancia entre dos fases (p. ej. aire y agua)?",
+   options:[["Siempre del agua hacia el aire, sin importar las condiciones",false],
+            ["De la fase de mayor fugacidad a la de menor, hasta igualarlas en el equilibrio",true],
+            ["Hacia la fase con mayor temperatura, siempre",false],
+            ["De la fase de menor a mayor fugacidad, hasta maximizar la diferencia",false]],
+   explain:"La fugacidad es la 'presión de escape'. El flujo neto va de alta a baja fugacidad; en el equilibrio se igualan (aunque las concentraciones difieran). Es la base de los modelos multimedia de Mackay."},
+  {tag:"Tasa de Lavado (Flushing)",
+   q:"En un lago modelado como reactor de mezcla completa, la tasa de lavado se define como kw = Q/V. ¿Qué representa físicamente?",
+   options:[["La masa total de contaminante presente en el lago",false],
+            ["El inverso del tiempo de residencia hidráulico: qué tan rápido se renueva el agua del compartimento",true],
+            ["La velocidad del viento sobre la superficie del agua",false],
+            ["La concentración de entrada menos la de salida",false]],
+   explain:"kw = Q/V tiene unidades de 1/tiempo; su inverso τ = V/Q es el tiempo de residencia hidráulico. A mayor kw, más rápido se renueva el agua y menos tiempo permanece el contaminante."},
+  {tag:"Tiempo de Residencia Atmosférico",
+   q:"¿Por qué reducir las emisiones de metano (CH₄) produce efectos climáticos más rápidos que reducir CO₂?",
+   options:[["Porque el CH₄ no es un gas de efecto invernadero",false],
+            ["Porque el CH₄ tiene un tiempo de residencia atmosférico mucho más corto (~años) que parte del CO₂ (~siglos)",true],
+            ["Porque el CH₄ se disuelve por completo en el océano",false],
+            ["Porque el CO₂ solo se forma de noche",false]],
+   explain:"Con M = R·τ, el CH₄ se remueve en ~9–12 años (sobre todo por ·OH), mientras una fracción del CO₂ persiste siglos. Por eso recortar metano alivia el forzamiento radiativo más rápido."},
+  {tag:"Advección vs. Difusión",
+   q:"En el transporte de contaminantes, ¿cuál es la diferencia entre advección y difusión?",
+   options:[["Son sinónimos: ambos describen el mismo proceso",false],
+            ["La advección es transporte por el movimiento del fluido (caudal/velocidad); la difusión es por gradiente de concentración",true],
+            ["La advección solo ocurre en el aire y la difusión solo en el agua",false],
+            ["La advección reduce la masa total y la difusión la aumenta",false]],
+   explain:"La advección mueve el contaminante 'montado' en el flujo (velocidad u). La difusión/dispersión lo esparce de zonas de alta a baja concentración, exista o no flujo neto."},
+  {tag:"Interacción entre Esferas",
+   q:"La fijación de CO₂ por fotosíntesis y su liberación por respiración representan un intercambio de masa entre:",
+   options:[["Geosfera e hidrosfera",false],["Biosfera y atmósfera",true],
+            ["Antroposfera y criosfera",false],["Hidrosfera y litosfera",false]],
+   explain:"Fotosíntesis y respiración transfieren carbono entre la biosfera y la atmósfera: uno de los flujos centrales del ciclo global del carbono."},
+  {tag:"Reactor de Mezcla Completa (CSTR)",
+   q:"En un reactor de mezcla completa (CSTR), como se modela un lago bien mezclado, ¿qué se asume sobre la concentración?",
+   options:[["Que aumenta con la profundidad",false],
+            ["Que la concentración es uniforme en todo el volumen e igual a la de salida",true],
+            ["Que es cero en el centro del lago",false],
+            ["Que varía de forma aleatoria en el tiempo",false]],
+   explain:"En un CSTR la mezcla es instantánea y completa: la concentración es homogénea y la del efluente (salida) iguala a la del interior. Por eso C_out = C_lago en el balance de masas."},
+  {tag:"Constante de Henry",
+   q:"La constante de Henry describe la partición de una sustancia entre:",
+   options:[["Dos líquidos inmiscibles entre sí",false],
+            ["La fase gaseosa y la disuelta en agua (relaciona presión parcial con concentración)",true],
+            ["El suelo y las raíces de las plantas",false],
+            ["El hielo y el vapor de agua",false]],
+   explain:"La ley de Henry relaciona la presión parcial de un gas con su concentración disuelta en equilibrio. Gobierna el intercambio aire–agua (volatilización/disolución) de muchos contaminantes."},
+  {tag:"Biomagnificación",
+   q:"¿Qué describe la biomagnificación?",
+   options:[["La dilución de un contaminante al descender por la cadena trófica",false],
+            ["El aumento de la concentración de un contaminante al ascender en los niveles tróficos de la cadena alimentaria",true],
+            ["La degradación de un contaminante por bacterias del suelo",false],
+            ["La evaporación de un contaminante desde los tejidos grasos",false]],
+   explain:"La biomagnificación es el incremento progresivo de la concentración de sustancias persistentes y lipofílicas (alto Kow) a medida que se sube de nivel trófico (del plancton a los peces depredadores)."},
+  {tag:"Contaminantes Orgánicos Persistentes",
+   q:"¿Cuál es una característica definitoria de los Contaminantes Orgánicos Persistentes (COP/POPs)?",
+   options:[["Se degradan en horas y no viajan lejos de la fuente",false],
+            ["Son muy volátiles y se eliminan rápidamente del ambiente",false],
+            ["Son persistentes, bioacumulables, tóxicos y capaces de transporte de largo alcance",true],
+            ["Solo pueden existir en condiciones de laboratorio",false]],
+   explain:"Los POPs (p. ej. DDT, PCBs) resisten la degradación, se acumulan en grasas (alto Kow), son tóxicos y se transportan a grandes distancias —incluso a los polos—, de ahí el Convenio de Estocolmo."},
+  {tag:"Cinética de Primer Orden",
+   q:"Para una reacción de degradación de primer orden, la vida media (t½ = ln2/k) depende de:",
+   options:[["Solo de la constante de velocidad k, no de la concentración inicial",true],
+            ["Solo de la concentración inicial del contaminante",false],
+            ["Del volumen del reactor o del cuerpo de agua",false],
+            ["Únicamente de la temperatura ambiente",false]],
+   explain:"En cinética de primer orden t½ = ln2/k es independiente de la concentración inicial: siempre tarda lo mismo en reducirse a la mitad. En orden cero o segundo sí dependería de C₀."},
+  {tag:"Términos del Balance de Masa",
+   q:"En la ecuación general de balance de masa, el término de 'acumulación' (dC/dt · V) representa:",
+   options:[["La cantidad de contaminante que abandona el sistema",false],
+            ["El cambio neto de masa almacenada dentro del volumen de control por unidad de tiempo",true],
+            ["La masa producida por reacciones internas, siempre",false],
+            ["Un valor que por definición es siempre positivo",false]],
+   explain:"La acumulación es la tasa de cambio de la masa almacenada: acumulación = entradas − salidas + producción − remoción. En estado estacionario vale cero, pero fuera de él puede ser positiva o negativa."}
+];
+
+/* ====================== CONFIG ====================== */
+const TIME_PER_Q=20, BASE=10, MAX_TIME_BONUS=5, MAX_FIFTY=2, LETTERS=['A','B','C','D'], QUIZ_LEN=10;
+
+/* ====================== PERSISTENCIA (mejor puntaje) ====================== */
+/* Usa localStorage cuando está disponible (p. ej. tu GitHub Pages). En vistas
+   previas que lo bloquean, cae limpiamente a memoria y NO rompe el juego. */
+function loadBest(){ try{ return parseInt(localStorage.getItem('ecoq_best')||'0',10)||0; }catch(e){ return memBest; } }
+function saveBest(v){ memBest=v; try{ localStorage.setItem('ecoq_best',String(v)); }catch(e){} }
+let memBest=0, bestScore=loadBest();
+
+/* ====================== AUDIO (Web Audio API) ====================== */
+let audioCtx=null, masterGain=null, musicMaster=null, musicFilter=null;
+let sfxOn=true, musicOn=true;
+let chordIdx=0, chordTimer=null, melTimer=null;
+
+function initAudio(){
+  if(!audioCtx){
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC) return;
+    try{
+      audioCtx=new AC();
+      masterGain=audioCtx.createGain(); masterGain.gain.value=0.9; masterGain.connect(audioCtx.destination);
+      musicFilter=audioCtx.createBiquadFilter(); musicFilter.type='lowpass'; musicFilter.frequency.value=1600;
+      musicMaster=audioCtx.createGain(); musicMaster.gain.value=0; musicMaster.connect(musicFilter); musicFilter.connect(audioCtx.destination);
+    }catch(e){ audioCtx=null; }
+  }
+  if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+}
+
+/* --- efectos de sonido --- */
+function tone(freq,start,dur,type='sine',gain=0.18){
+  if(!audioCtx||!sfxOn||!masterGain) return;
+  const t0=audioCtx.currentTime+start;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type=type; o.frequency.value=freq;
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(gain,t0+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  o.connect(g); g.connect(masterGain);
+  o.start(t0); o.stop(t0+dur+0.05);
+}
+const sfxCorrect =()=>{ tone(659.25,0,0.13,'sine',0.18); tone(783.99,0.10,0.13,'sine',0.18); tone(1046.5,0.20,0.20,'sine',0.16); };
+const sfxWrong   =()=>{ tone(233.08,0,0.18,'sawtooth',0.12); tone(155.56,0.13,0.30,'sawtooth',0.12); };
+const sfxTimeout =()=>{ tone(196,0,0.45,'square',0.10); tone(146.83,0.18,0.5,'square',0.09); };
+const sfxFifty   =()=>{ tone(880,0,0.08,'triangle',0.14); tone(1174.7,0.07,0.13,'triangle',0.14); };
+const sfxTick    =()=>{ tone(1300,0,0.04,'square',0.05); };
+const sfxVictory =()=>{ [523.25,659.25,783.99,1046.5,1318.5].forEach((f,i)=>tone(f,i*0.12,0.22,'triangle',0.16)); };
+
+/* --- música ambiental procedural --- */
+const CHORDS=[[130.81,164.81,196.00],[146.83,174.61,220.00],[174.61,220.00,261.63],[196.00,246.94,293.66]];
+const PENTA=[523.25,587.33,659.25,783.99,880.00];
+const CHORD_MS=3800, MEL_MS=950;
+
+function pad(freq,dur){
+  if(!audioCtx||!musicMaster) return;
+  const t=audioCtx.currentTime;
+  const o=audioCtx.createOscillator(), o2=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type='sine'; o2.type='sine'; o.frequency.value=freq; o2.frequency.value=freq*1.006;
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(0.09,t+0.9);
+  g.gain.linearRampToValueAtTime(0.09,t+dur-0.9);
+  g.gain.linearRampToValueAtTime(0,t+dur);
+  o.connect(g); o2.connect(g); g.connect(musicMaster);
+  o.start(t); o2.start(t); o.stop(t+dur+0.1); o2.stop(t+dur+0.1);
+}
+function bell(freq){
+  if(!audioCtx||!musicMaster) return;
+  const t=audioCtx.currentTime;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type='triangle'; o.frequency.value=freq;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.05,t+0.03);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+1.6);
+  o.connect(g); g.connect(musicMaster);
+  o.start(t); o.stop(t+1.7);
+}
+function playChord(){ if(!musicOn) return; CHORDS[chordIdx].forEach(f=>pad(f,CHORD_MS/1000)); chordIdx=(chordIdx+1)%CHORDS.length; }
+function startMusic(){
+  if(!audioCtx||!musicOn) return;
+  stopMusicScheduler();
+  playChord();
+  chordTimer=setInterval(playChord,CHORD_MS);
+  melTimer=setInterval(()=>{ if(musicOn && Math.random()<0.55) bell(PENTA[(Math.random()*PENTA.length)|0]); },MEL_MS);
+  musicMaster.gain.cancelScheduledValues(audioCtx.currentTime);
+  musicMaster.gain.linearRampToValueAtTime(0.8,audioCtx.currentTime+1.2);
+}
+function stopMusicScheduler(){ clearInterval(chordTimer); clearInterval(melTimer); chordTimer=melTimer=null; }
+function stopMusic(){ stopMusicScheduler(); if(audioCtx&&musicMaster){ musicMaster.gain.cancelScheduledValues(audioCtx.currentTime); musicMaster.gain.linearRampToValueAtTime(0,audioCtx.currentTime+0.6); } }
+
+function toggleSfx(){ sfxOn=!sfxOn; updateAudioBtns(); if(sfxOn){ initAudio(); tone(880,0,0.08,'triangle',0.12);} }
+function toggleMusic(){ musicOn=!musicOn; updateAudioBtns(); initAudio(); if(musicOn) startMusic(); else stopMusic(); }
+function updateAudioBtns(){
+  document.getElementById('sfxToggle').classList.toggle('off',!sfxOn);
+  document.getElementById('musicToggle').classList.toggle('off',!musicOn);
+}
+
+/* ====================== ESTADO ====================== */
+let deck=[], current=0, score=0, streak=0, maxStreak=0, rights=0, fiftyLeft=MAX_FIFTY;
+let locked=false, timeLeft=TIME_PER_Q, ticker=null, log=[];
+const $=id=>document.getElementById(id);
+const shuffle=a=>{ for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+function buildDeck(){
+  deck=shuffle(BANK.map(o=>({...o}))).slice(0,QUIZ_LEN).map(item=>{
+    const opts=shuffle(item.options.map(([text,isCorrect])=>({text,isCorrect})));
+    return {tag:item.tag,q:item.q,explain:item.explain,opts,answer:opts.findIndex(o=>o.isCorrect)};
+  });
+}
+
+function startQuiz(){
+  initAudio();
+  if(musicOn) startMusic();
+  buildDeck();
+  current=0; score=0; streak=0; maxStreak=0; rights=0; fiftyLeft=MAX_FIFTY; log=[];
+  $('intro').classList.add('hidden'); $('result').classList.add('hidden');
+  $('quiz').classList.remove('hidden');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  locked=false;
+  const item=deck[current];
+  $('counter').textContent=`Pregunta ${current+1} / ${deck.length}`;
+  $('scoreLive').textContent=`★ ${score}`;
+  $('streak').textContent=`🔥 ${streak}`;
+  $('bar').style.width=`${(current/deck.length)*100}%`;
+  $('tag').textContent=item.tag;
+  $('qText').textContent=item.q;
+  $('fiftyLeft').textContent=fiftyLeft;
+  $('fiftyBtn').disabled=fiftyLeft<=0;
+  const fb=$('feedback'); fb.className='feedback'; fb.innerHTML='';
+  $('nextBtn').classList.remove('show');
+  $('nextBtn').textContent=current===deck.length-1?'Ver resultado →':'Siguiente →';
+  const box=$('options'); box.innerHTML='';
+  item.opts.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='opt'; b.dataset.i=i;
+    b.innerHTML=`<span class="key">${LETTERS[i]}</span><span>${o.text}</span>`;
+    b.onclick=()=>choose(i,b);
+    box.appendChild(b);
+  });
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(ticker);
+  timeLeft=TIME_PER_Q; paintTimer();
+  ticker=setInterval(()=>{
+    timeLeft--; paintTimer();
+    if(timeLeft<=5 && timeLeft>0) sfxTick();
+    if(timeLeft<=0){ clearInterval(ticker); timeUp(); }
+  },1000);
+}
+function paintTimer(){
+  $('timerNum').textContent=Math.max(timeLeft,0);
+  const fill=$('timerFill');
+  fill.style.width=`${(Math.max(timeLeft,0)/TIME_PER_Q)*100}%`;
+  fill.className=timeLeft<=5?'danger':(timeLeft<=10?'warn':'');
+}
+function lockOptions(){ [...document.querySelectorAll('.opt')].forEach(b=>b.disabled=true); }
+
+function choose(i,btn){
+  if(locked) return;
+  locked=true; clearInterval(ticker);
+  const item=deck[current];
+  [...document.querySelectorAll('.opt')].forEach((b,idx)=>{
+    b.disabled=true;
+    if(idx===item.answer) b.classList.add('correct');
+    else if(idx===i) b.classList.add('wrong');
+    else if(!b.classList.contains('removed')) b.classList.add('dim');
+  });
+  const fb=$('feedback');
+  if(i===item.answer){
+    const timeBonus=Math.round((timeLeft/TIME_PER_Q)*MAX_TIME_BONUS);
+    streak++; if(streak>maxStreak) maxStreak=streak;
+    const streakBonus=Math.min(streak-1,5)*2;
+    const gained=BASE+timeBonus+streakBonus;
+    score+=gained; rights++;
+    $('scoreLive').textContent=`★ ${score}`;
+    const s=$('streak'); s.textContent=`🔥 ${streak}`; s.classList.add('pop'); setTimeout(()=>s.classList.remove('pop'),250);
+    sfxCorrect();
+    fb.classList.add('good','show');
+    fb.innerHTML=`<b class="good-h">✓ ¡Correcto!</b><span class="gain">+${BASE} base${timeBonus?` · +${timeBonus} velocidad`:''}${streakBonus?` · +${streakBonus} racha`:''} = +${gained} pts</span><br><br>${item.explain}`;
+    log.push({tag:item.tag,ok:true,q:item.q,answer:item.opts[item.answer].text,explain:item.explain});
+  }else{
+    streak=0; $('streak').textContent='🔥 0';
+    sfxWrong();
+    fb.classList.add('bad','show');
+    fb.innerHTML=`<b class="bad-h">✗ Incorrecto</b>Correcta: <strong>${LETTERS[item.answer]}) ${item.opts[item.answer].text}</strong><br><br>${item.explain}`;
+    log.push({tag:item.tag,ok:false,q:item.q,answer:item.opts[item.answer].text,explain:item.explain});
+  }
+  $('fiftyBtn').disabled=true;
+  $('nextBtn').classList.add('show');
+}
+
+function timeUp(){
+  if(locked) return;
+  locked=true;
+  const item=deck[current];
+  lockOptions();
+  [...document.querySelectorAll('.opt')].forEach((b,idx)=>{ if(idx===item.answer) b.classList.add('correct'); else b.classList.add('dim'); });
+  streak=0; $('streak').textContent='🔥 0';
+  sfxTimeout();
+  const fb=$('feedback'); fb.classList.add('bad','show');
+  fb.innerHTML=`<b class="bad-h">⏱ ¡Se acabó el tiempo!</b>Correcta: <strong>${LETTERS[item.answer]}) ${item.opts[item.answer].text}</strong><br><br>${item.explain}`;
+  log.push({tag:item.tag,ok:false,q:item.q,answer:item.opts[item.answer].text,explain:item.explain});
+  $('fiftyBtn').disabled=true;
+  $('nextBtn').classList.add('show');
+}
+
+function useFifty(){
+  if(locked||fiftyLeft<=0) return;
+  fiftyLeft--; $('fiftyLeft').textContent=fiftyLeft; $('fiftyBtn').disabled=true;
+  sfxFifty();
+  const item=deck[current];
+  const wrong=item.opts.map((o,idx)=>idx).filter(idx=>idx!==item.answer);
+  shuffle(wrong);
+  wrong.slice(0,2).forEach(idx=>{ const b=document.querySelector(`.opt[data-i="${idx}"]`); b.classList.add('removed'); b.disabled=true; });
+}
+
+function nextQuestion(){ current++; if(current<deck.length) renderQuestion(); else showResult(); }
+
+function showResult(){
+  clearInterval(ticker);
+  $('quiz').classList.add('hidden'); $('result').classList.remove('hidden');
+
+  let newRecord=false;
+  if(score>bestScore){ bestScore=score; saveBest(bestScore); newRecord=true; }
+  $('recordBadge').classList.toggle('hidden',!newRecord);
+
+  const pct=Math.round((rights/deck.length)*100);
+  const circ=465, ring=$('ringFill');
+  ring.style.transition='none'; ring.style.strokeDashoffset=circ;
+  setTimeout(()=>{ ring.style.transition='stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1)'; ring.style.strokeDashoffset=circ-(circ*pct/100); },120);
+  let n=0; const pctEl=$('ringPct');
+  const t=setInterval(()=>{ n++; pctEl.textContent=n+'%'; if(n>=pct) clearInterval(t); },16);
+
+  $('rScore').textContent=score;
+  $('rBest').textContent=bestScore;
+  $('rStreak').textContent=maxStreak;
+  $('rRight').textContent=`${rights}/${deck.length}`;
+
+  const v=$('verdict'), msg=$('resultMsg');
+  if(pct>=90){ v.textContent='¡Maestría Ambiental!'; v.className='verdict gold';
+    msg.textContent='Dominas el balance de masas y la dinámica de los compartimentos. Nivel experto.'; }
+  else if(pct>=60){ v.textContent='¡Buen trabajo!'; v.className='verdict green';
+    msg.textContent='Sólida base en química ambiental. Repasa abajo lo que fallaste y sube tu racha.'; }
+  else { v.textContent='A seguir estudiando'; v.className='verdict coral';
+    msg.textContent='Revisa abajo cada tema: esferas, estado estacionario y fugacidad te esperan.'; }
+
+  if(pct>=90||newRecord){ launchConfetti(); sfxVictory(); }
+
+  const rev=$('review'); rev.innerHTML='';
+  log.forEach(it=>{
+    const wrap=document.createElement('div'); wrap.className='rev-item';
+    wrap.innerHTML=`
+      <div class="rev-head" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="rev-mark ${it.ok?'ok':'no'}">${it.ok?'✓':'✗'}</span>
+        <span class="rev-tag">${it.tag}</span>
+        <span class="rev-toggle">ver ▾</span>
+      </div>
+      <div class="rev-body">
+        <div style="margin-top:12px">${it.q}</div>
+        <div style="margin-top:8px" class="ans">✓ ${it.answer}</div>
+        <div style="margin-top:8px">${it.explain}</div>
+      </div>`;
+    rev.appendChild(wrap);
+  });
+}
+
+function restart(){ startQuiz(); }
+
+/* ====================== CONFETI ====================== */
+function launchConfetti(){
+  const colors=['#bef264','#14b8a6','#fbbf24','#34d399','#fb7185'];
+  for(let i=0;i<90;i++){
+    const c=document.createElement('div'); c.className='confetti';
+    c.style.left=Math.random()*100+'vw';
+    c.style.background=colors[(Math.random()*colors.length)|0];
+    c.style.animationDuration=(2.2+Math.random()*1.8)+'s';
+    c.style.animationDelay=(Math.random()*.6)+'s';
+    c.style.transform=`rotate(${Math.random()*360}deg)`;
+    if(Math.random()>.5) c.style.borderRadius='50%';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),4600);
+  }
+}
+
+/* ====================== INIT ====================== */
+(function(){
+  // mejor puntaje en la intro
+  if(bestScore>0) $('introBest').textContent=`🏆 Mejor puntaje: ${bestScore}`;
+  updateAudioBtns();
+  // burbujas
+  const c=$('bubbles');
+  for(let i=0;i<14;i++){
+    const s=document.createElement('span');
+    const size=12+Math.random()*46;
+    s.style.width=s.style.height=size+'px';
+    s.style.left=Math.random()*100+'%';
+    s.style.animationDuration=(11+Math.random()*14)+'s';
+    s.style.animationDelay=(-Math.random()*16)+'s';
+    c.appendChild(s);
+  }
+})();
+</script>
+</body>
+</html>
