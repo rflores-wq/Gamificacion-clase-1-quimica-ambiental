@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EcoQuímica · Trivia de Química Ambiental v4</title>
+<title>EcoQuímica · Trivia de Química Ambiental v6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -187,13 +187,13 @@
 
     <!-- INTRO -->
     <section id="intro">
-      <div class="kicker">Química Ambiental · Trivia v4</div>
+      <div class="kicker">Química Ambiental · Trivia v6</div>
       <h1>Eco<em>Química</em><br>Reto Cronometrado</h1>
       <p class="lede">Diez preguntas sobre esferas ambientales, estado estacionario, el radical OH, partición octanol–agua y fugacidad. Responde rápido, encadena rachas y usa tu comodín con cabeza.</p>
       <div class="intro-best" id="introBest"></div>
       <div class="meta">
         <div class="chip"><b>10/20</b><small>Al azar del banco</small></div>
-        <div class="chip"><b>20 s</b><small>Por pregunta</small></div>
+        <div class="chip"><b>40 s</b><small>Por pregunta</small></div>
         <div class="chip"><b>×5</b><small>Bono racha</small></div>
         <div class="chip"><b>50:50</b><small>Comodín ×2</small></div>
       </div>
@@ -214,7 +214,7 @@
       </div>
       <div class="timer-wrap">
         <div class="timer-bar"><i id="timerFill"></i></div>
-        <span class="timer-num" id="timerNum">20</span>
+        <span class="timer-num" id="timerNum">40</span>
       </div>
       <div class="progress"><i id="bar"></i></div>
       <div class="tag" id="tag">Tema</div>
@@ -402,7 +402,7 @@ const BANK = [
 ];
 
 /* ====================== CONFIG ====================== */
-const TIME_PER_Q=20, BASE=10, MAX_TIME_BONUS=5, MAX_FIFTY=2, LETTERS=['A','B','C','D'], QUIZ_LEN=10;
+const TIME_PER_Q=40, BASE=10, MAX_TIME_BONUS=5, MAX_FIFTY=2, LETTERS=['A','B','C','D'], QUIZ_LEN=10;
 
 /* ====================== PERSISTENCIA (mejor puntaje) ====================== */
 /* Usa localStorage cuando está disponible (p. ej. tu GitHub Pages). En vistas
@@ -419,16 +419,28 @@ let chordIdx=0, chordTimer=null, melTimer=null;
 function initAudio(){
   if(!audioCtx){
     const AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC) return;
+    if(!AC) return null;
     try{
       audioCtx=new AC();
       masterGain=audioCtx.createGain(); masterGain.gain.value=0.9; masterGain.connect(audioCtx.destination);
       musicFilter=audioCtx.createBiquadFilter(); musicFilter.type='lowpass'; musicFilter.frequency.value=1600;
       musicMaster=audioCtx.createGain(); musicMaster.gain.value=0; musicMaster.connect(musicFilter); musicFilter.connect(audioCtx.destination);
-    }catch(e){ audioCtx=null; }
+    }catch(e){ audioCtx=null; return null; }
   }
-  if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
 }
+/* Despierta el contexto (los navegadores lo crean "suspendido") y recién
+   entonces ejecuta cb; así la música no se programa sobre un contexto dormido. */
+function resumeAudio(cb){
+  const ctx=initAudio();
+  if(!ctx){ if(cb) cb(); return; }
+  if(ctx.state==='suspended'){
+    ctx.resume().then(()=>{ if(cb) cb(); }).catch(()=>{ if(cb) cb(); });
+  }else if(cb){ cb(); }
+}
+/* Desbloqueo temprano: el primer toque o tecla en cualquier parte deja el audio listo. */
+['pointerdown','keydown','touchstart'].forEach(ev=>
+  document.addEventListener(ev,()=>resumeAudio(),{once:true,passive:true}));
 
 /* --- efectos de sonido --- */
 function tone(freq,start,dur,type='sine',gain=0.18){
@@ -479,19 +491,25 @@ function bell(freq){
 }
 function playChord(){ if(!musicOn) return; CHORDS[chordIdx].forEach(f=>pad(f,CHORD_MS/1000)); chordIdx=(chordIdx+1)%CHORDS.length; }
 function startMusic(){
-  if(!audioCtx||!musicOn) return;
-  stopMusicScheduler();
-  playChord();
-  chordTimer=setInterval(playChord,CHORD_MS);
-  melTimer=setInterval(()=>{ if(musicOn && Math.random()<0.55) bell(PENTA[(Math.random()*PENTA.length)|0]); },MEL_MS);
-  musicMaster.gain.cancelScheduledValues(audioCtx.currentTime);
-  musicMaster.gain.linearRampToValueAtTime(0.8,audioCtx.currentTime+1.2);
+  if(!musicOn) return;
+  resumeAudio(()=>{
+    if(!audioCtx||!musicMaster||!musicOn) return;
+    stopMusicScheduler();
+    chordIdx=0;
+    playChord();
+    chordTimer=setInterval(playChord,CHORD_MS);
+    melTimer=setInterval(()=>{ if(musicOn && Math.random()<0.55) bell(PENTA[(Math.random()*PENTA.length)|0]); },MEL_MS);
+    const now=audioCtx.currentTime;
+    musicMaster.gain.cancelScheduledValues(now);
+    musicMaster.gain.setValueAtTime(Math.max(musicMaster.gain.value,0.0001),now); // ancla (clave para que suba)
+    musicMaster.gain.linearRampToValueAtTime(0.85,now+1.0);
+  });
 }
 function stopMusicScheduler(){ clearInterval(chordTimer); clearInterval(melTimer); chordTimer=melTimer=null; }
-function stopMusic(){ stopMusicScheduler(); if(audioCtx&&musicMaster){ musicMaster.gain.cancelScheduledValues(audioCtx.currentTime); musicMaster.gain.linearRampToValueAtTime(0,audioCtx.currentTime+0.6); } }
+function stopMusic(){ stopMusicScheduler(); if(audioCtx&&musicMaster){ const now=audioCtx.currentTime; musicMaster.gain.cancelScheduledValues(now); musicMaster.gain.setValueAtTime(musicMaster.gain.value,now); musicMaster.gain.linearRampToValueAtTime(0,now+0.6); } }
 
-function toggleSfx(){ sfxOn=!sfxOn; updateAudioBtns(); if(sfxOn){ initAudio(); tone(880,0,0.08,'triangle',0.12);} }
-function toggleMusic(){ musicOn=!musicOn; updateAudioBtns(); initAudio(); if(musicOn) startMusic(); else stopMusic(); }
+function toggleSfx(){ sfxOn=!sfxOn; updateAudioBtns(); if(sfxOn){ resumeAudio(()=>tone(880,0,0.08,'triangle',0.12)); } }
+function toggleMusic(){ musicOn=!musicOn; updateAudioBtns(); if(musicOn) startMusic(); else stopMusic(); }
 function updateAudioBtns(){
   document.getElementById('sfxToggle').classList.toggle('off',!sfxOn);
   document.getElementById('musicToggle').classList.toggle('off',!musicOn);
@@ -511,7 +529,7 @@ function buildDeck(){
 }
 
 function startQuiz(){
-  initAudio();
+  resumeAudio();
   if(musicOn) startMusic();
   buildDeck();
   current=0; score=0; streak=0; maxStreak=0; rights=0; fiftyLeft=MAX_FIFTY; log=[];
